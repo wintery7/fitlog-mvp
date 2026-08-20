@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  role         String    @default("TRAINER")
+  passwordHash String?
+  trainer      Trainer?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Trainer {
+  id          String       @id @default(cuid())
+  userId      String       @unique
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone       String?
+  email       String?
+  branch      String?
+  approved    Boolean      @default(false)
+  members     Member[]     @relation("AssignedTrainer")
+  workoutLogs WorkoutLog[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Member {
+  id              String        @id @default(cuid())
+  memberNumber    String        @unique
+  name            String
+  passwordHash    String?
+  email           String?       @unique
+  phone           String?       @unique
+  birthDate       DateTime?
+  gender          String?
+  registeredAt    DateTime      @default(now())
+  status          String        @default("ACTIVE")
+  memo            String?
+  trainerId       String?
+  trainer         Trainer?      @relation("AssignedTrainer", fields: [trainerId], references: [id], onDelete: SetNull)
+  memberships     Membership[]
+  workoutLogs     WorkoutLog[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([name])
+  @@index([trainerId])
+}
+
+model Membership {
+  id             String    @id @default(cuid())
+  memberId       String
+  member         Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  membershipFrom DateTime?
+  membershipTo   DateTime?
+  ptFrom         DateTime?
+  ptTo           DateTime?
+  ptRemaining    Int?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([memberId])
+}
+
+model Exercise {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  aliases     ExerciseAlias[]
+  records     ExerciseRecord[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model ExerciseAlias {
+  id          String   @id @default(cuid())
+  alias       String   @unique
+  exerciseId  String
+  exercise    Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@index([exerciseId])
+}
+
+model WorkoutLog {
+  id            String           @id @default(cuid())
+  memberId      String
+  trainerId     String?
+  workoutDate   DateTime
+  transcript    String?
+  generalNote   String?
+  member        Member           @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  trainer       Trainer?         @relation(fields: [trainerId], references: [id], onDelete: SetNull)
+  exerciseRecords ExerciseRecord[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@index([memberId, workoutDate])
+  @@index([trainerId, workoutDate])
+}
+
+model ExerciseRecord {
+  id            String      @id @default(cuid())
+  workoutLogId  String
+  exerciseId    String?
+  exerciseName  String
+  note          String?
+  order         Int
+  workoutLog    WorkoutLog  @relation(fields: [workoutLogId], references: [id], onDelete: Cascade)
+  exercise      Exercise?   @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
+  sets          SetRecord[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([workoutLogId, order])
+  @@index([exerciseId])
+}
+
+model SetRecord {
+  id               String         @id @default(cuid())
+  exerciseRecordId String
+  setNumber        Int
+  weight           Float?
+  repetitions      Int?
+  duration         Int?
+  distance         Float?
+  note             String?
+  exerciseRecord   ExerciseRecord @relation(fields: [exerciseRecordId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([exerciseRecordId, setNumber])
+}

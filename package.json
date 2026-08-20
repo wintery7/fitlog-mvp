@@ -1,0 +1,34 @@
+{
+  "name": "fitlog-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "node scripts/init-sqlite.mjs && next start",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "postinstall": "prisma generate",
+    "db:init": "node scripts/init-sqlite.mjs",
+    "db:seed": "node scripts/seed-sqlite.mjs"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.14.0",
+    "next": "^15.4.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "prisma": "^6.14.0",
+    "typescript": "^5.0.0",
+    "vitest": "^3.2.0"
+  }
+}
